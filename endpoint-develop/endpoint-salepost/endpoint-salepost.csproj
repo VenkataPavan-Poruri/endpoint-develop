@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>endpoint_salepost</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\core-develop\core-develop.csproj" />
+    <ProjectReference Include="..\endpoint-impl\endpoint-impl.csproj" />
+    <ProjectReference Include="..\endpoint-models\endpoint-models.csproj" />
+    <ProjectReference Include="..\endpoint-service\endpoint-service.csproj" />
+  </ItemGroup>
+
+</Project>

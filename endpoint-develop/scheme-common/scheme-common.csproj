@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>scheme_common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\core-develop\core-develop.csproj" />
+    <ProjectReference Include="..\datalayer\datalayer.csproj" />
+  </ItemGroup>
+
+</Project>

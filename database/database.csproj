@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="voicecommerce\daos\AmexServiceEstablishmentDaoImpl.cs" />
+    <Compile Remove="voicecommerce\model\sale\impl\EntitySaleRepoImpl.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="voicecommerce\model\sale\impl\" />
+  </ItemGroup>
+
+</Project>

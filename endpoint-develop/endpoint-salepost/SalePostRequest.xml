@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?> 
+<SalePostRequest> 
+	<gatewayReference>01S00BE20CF </gatewayReference>
+	<authTypeCode>ECOM</authTypeCode> 
+	<recurrenceFlag>SINGLE</recurrenceFlag> 
+	<authMode>FINAL</authMode> 
+	<exemptionIndicator></exemptionIndicator>
+	<money> 
+		<amount>300</amount> 
+		<currencyCode>GBP</currencyCode>
+	</money>
+	<terminal>
+		<mid>100121943</mid> 
+		<tid>1</tid>
+	</terminal>
+	<card>
+		<cardNumber>XXXXXXXXXXXXXXXX</cardNumber>
+		<cvv>555</cvv>
+	<cardDates>
+		<expiryDate>2210</expiryDate>
+		<issueDate>0000</issueDate>
+	</cardDates>
+	<avsData>
+		<address>Fulborn, Cambridge, Cambridgshire</address>
+		<postalCode>CB1 1AA</postalCode>
+	</avsData>
+	</card>
+	<fundsRecipient>
+		<surname>TestReciName</surname> 
+		<birthDate>1980-08-06 00:00:00.0 UTC</birthDate>
+		<accountNumber>XXXXXXXXXXXXXXXX</accountNumber>
+		<postalCode>CB4 2EY</postalCode>
+	</fundsRecipient>
+	<isDebtRepayTrans>false</isDebtRepayTrans>
+	<ewallet>0</ewallet>
+</SalePostRequest>

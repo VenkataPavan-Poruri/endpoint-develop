@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>endpoint_impl</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\database\database.csproj" />
+    <ProjectReference Include="..\datalayer\datalayer.csproj" />
+    <ProjectReference Include="..\endpoint-api\endpoint-api.csproj" />
+    <ProjectReference Include="..\scheme-common\scheme-common.csproj" />
+    <ProjectReference Include="..\scheme-visa\scheme-visa.csproj" />
+    <ProjectReference Include="..\visa-edit-ftp\visa-edit-ftp.csproj" />
+  </ItemGroup>
+
+</Project>

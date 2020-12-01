@@ -1,0 +1,589 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+  <!-- Posting -->
+  <bean id="salepostInitialStage"
+                class="com.voicecommerce.endpoint.stages.sale.SalePostSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg name="next" ref="salepostFailedSaleCreationStage"/>
+  </bean>
+
+  <bean id="salepostFailedSaleCreationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostFailedSaleCreation">
+    <constructor-arg name="next" ref="salepostTransactionSetupStage"/>
+  </bean>
+
+  <bean id="salepostTransactionSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostTransactionSetup">
+    <constructor-arg name="next" ref="salepostSetAuthModeStage"/>
+  </bean>
+
+  <bean id="salepostSetAuthModeStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostSetAuthMode">
+    <constructor-arg name="next" ref="salepostCardSetupStage"/>
+    <property name="defaultAuthMode" value="#{'${mastercard.default.authMode}'}"/>
+  </bean>
+
+  <bean id="salepostCardSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostCardSetup">
+    <constructor-arg name="cardUtils" ref="cardSetupUtility"/>
+    <constructor-arg name="next" ref="salepostCardCheckStage"/>
+  </bean>
+
+  <bean id="salepostCardCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostCardCheck">
+    <constructor-arg name="schemeCheck" ref="schemeCheckUtility"/>
+    <constructor-arg name="next" ref="salepostCurrencyCheckStage"/>
+  </bean>
+
+  <bean id="salepostCurrencyCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostCurrencyCheck">
+    <constructor-arg name="serviceEstablishmentDao" ref="amexServiceEstablishmentDAO"/>
+    <constructor-arg name="next" ref="salepostTerminalSetupStage"/>
+  </bean>
+
+  <bean id="salepostTerminalSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostTerminalSetup">
+    <constructor-arg name="next" ref="salepostAuthentSetupStage"/>
+  </bean>
+
+  <bean id="salepostAuthentSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostAuthenticationDataSetup">
+    <constructor-arg name="next" ref="salepostRecipientSetupStage"/>
+  </bean>
+
+  <bean id="salepostRecipientSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostFundsRecipientSetup">
+    <constructor-arg name="next" ref="salepostTerminalCheckStage"/>
+  </bean>
+
+  <bean id="salepostTerminalCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostTerminalCheck">
+    <constructor-arg name="next" ref="salepostDynamicAcceptorStage"/>
+  </bean>
+
+  <bean id="salepostDynamicAcceptorStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostDynamicAcceptor">
+    <constructor-arg name="acceptorUtility" ref="explicitAcceptorUtility"/>
+    <constructor-arg name="next" ref="salepostSoftDescriptorStage"/>
+  </bean>
+
+  <bean id="salepostSoftDescriptorStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostSoftDescriptor">
+    <constructor-arg name="next" ref="salepostDebtRepaymentSetUpStage"/>
+  </bean>
+
+  <bean id="salepostDebtRepaymentSetUpStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostDebtRepaymentSetUp">
+    <constructor-arg name="debtRepaymentUtility" ref="debtRepaymentSetUpUtility"/>
+    <constructor-arg name="next" ref="salepostFundsRecipientCheckStage"/>
+  </bean>
+
+  <bean id="salepostFundsRecipientCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostFundsRecipientCheck">
+    <constructor-arg name="next" ref="salepostSTANGenerationStage"/>
+  </bean>
+
+  <bean id="salepostSTANGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostSTANGeneration">
+    <constructor-arg name="next" ref="salepostStorageStage"/>
+  </bean>
+
+  <bean id="salepostStorageStage" class="com.voicecommerce.endpoint.stages.sale.SalePostStorage">
+    <constructor-arg name="next" ref="salepostARNGeneratorStage"/>
+  </bean>
+
+  <bean id="salepostARNGeneratorStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostARNGeneration">
+    <constructor-arg name="arnGenerator" ref="arnGeneratorUtility"/>
+    <!--<constructor-arg name="next" ref="authResponseMapper"/>-->
+    <constructor-arg name="next" ref="salepostCostParameterCalculationStage"/>
+  </bean>
+
+  <bean id="salepostCostParameterCalculationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostCostDesignatorParameterCalculation">
+    <constructor-arg name="costingUtility" ref="costDesigParamsUtility"/>
+    <constructor-arg name="next" ref="salepostLockMerchantStage"/>
+  </bean>
+
+  <bean id="salepostLockMerchantStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostLockMerchant">
+    <constructor-arg name="next" ref="salepostCheckCardTerminalStatsStage"/>
+  </bean>
+
+  <bean id="salepostCheckCardTerminalStatsStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostCheckCardTerminalStatistics">
+    <constructor-arg name="next" ref="salepostCheckSchemeTerminalStatsStage"/>
+    <constructor-arg ref="checkCardTerminalStatsUtility"/>
+  </bean>
+
+  <bean id="salepostCheckSchemeTerminalStatsStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostCheckSchemeTerminalStatistics">
+    <constructor-arg name="next" ref="salepostResponseMappingStage"/>
+    <constructor-arg ref="checkSchemeTerminalStatsUtility"/>
+  </bean>
+
+  <bean id="salepostResponseMappingStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostResponseMapping">
+    <constructor-arg ref="responseMapper"/>
+    <constructor-arg name="next" ref="salepostSchemeDispatchStage"/>
+  </bean>
+
+  <bean id="salepostSchemeDispatchStage"
+        class="com.voicecommerce.endpoint.stages.sale.SalePostSchemeDispatch"/>
+
+
+  <!-- Legacy Sales -->
+  <bean id="legacysalepostInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.LegacySalePostSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg name="next" ref="legacysalepostCheckExistsStage"/>
+  </bean>
+
+  <bean id="legacysalepostCheckExistsStage"
+        class="com.voicecommerce.endpoint.stages.sale.LegacySalePostCheckIfExists">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg name="next" ref="legacysalepostBuildSaleStage"/>
+  </bean>
+
+  <bean id="legacysalepostBuildSaleStage"
+        class="com.voicecommerce.endpoint.stages.sale.LegacySalePostBuildSale">
+    <constructor-arg name="cardUtils" ref="cardSetupUtility"/>
+    <constructor-arg name="next" ref="legacysalepostStorageStage"/>
+  </bean>
+
+  <bean id="legacysalepostStorageStage"
+        class="com.voicecommerce.endpoint.stages.sale.LegacySalePostStorage">
+    <constructor-arg name="next" ref="legacysalepostBuildResponseStage"/>
+  </bean>
+
+  <bean id="legacysalepostBuildResponseStage"
+        class="com.voicecommerce.endpoint.stages.sale.LegacySalePostBuildResponse">
+    <constructor-arg name="costingUtility" ref="costDesigParamsUtility"/>
+    <constructor-arg name="next">
+      <null/>
+    </constructor-arg>
+  </bean>
+
+
+  <!-- Voiding -->
+  <bean id="salevoidInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg name="next" ref="salevoidGenericInfoStage"/>
+  </bean>
+
+  <bean id="salevoidGenericInfoStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidSetGenericInfo">
+    <constructor-arg name="next" ref="salevoidOrigSaleRetrievalStage"/>
+  </bean>
+
+  <bean id="salevoidOrigSaleRetrievalStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidFindOriginalSale">
+    <constructor-arg name="next" ref="salevoidSetReasonStage"/>
+  </bean>
+
+  <bean id="salevoidSetReasonStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidDetermineReason">
+    <constructor-arg name="next" ref="salevoidSTANGenerationStage"/>
+  </bean>
+
+  <bean id="salevoidSTANGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidSTANGeneration">
+    <constructor-arg name="mastercardScheme" ref="mastercardScheme"/>
+    <constructor-arg name="amexScheme" ref="amexScheme"/>
+    <constructor-arg name="next" ref="salevoidStorageStage"/>
+  </bean>
+
+  <bean id="salevoidStorageStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidStorage">
+    <constructor-arg name="next" ref="salevoidARNGenerationStage"/>
+  </bean>
+
+  <bean id="salevoidARNGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidARNGeneration">
+    <constructor-arg name="arnGenerator" ref="arnGeneratorUtility"/>
+    <constructor-arg name="next" ref="salevoidResponseMapperStage"/>
+  </bean>
+
+  <bean id="salevoidResponseMapperStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidResponseMapping">
+    <constructor-arg ref="responseMapper"/>
+    <constructor-arg ref="salevoidSchemeDispatcherStage"/>
+  </bean>
+
+  <bean id="salevoidSchemeDispatcherStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleVoidSchemeDispatch">
+    <constructor-arg name="visaScheme" ref="visaScheme"/>
+    <constructor-arg name="mastercardScheme" ref="mastercardScheme"/>
+    <constructor-arg name="amexScheme" ref="amexScheme"/>
+  </bean>
+
+  <!-- Open Sale Advisement -->
+  <bean id="opensaleadvisementInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.OpenSaleAdvisementQuery">
+    <constructor-arg ref="saleRepo"/>
+  </bean>
+
+  <!-- Subsequent Sale -->
+  <!-- Posting -->
+  <bean id="subsequentsalepostInitialStage" class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg ref="subsequentsalepostOriginalSaleRetrievalStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostOriginalSaleRetrievalStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostOriginalItemRetrieval">
+    <constructor-arg ref="subsequentsalepostFailedSaleCreationStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostFailedSaleCreationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostFailedSaleCreation">
+    <constructor-arg name="next" ref="subsequentsalepostTransactionSetupStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostTransactionSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostTransactionSetup">
+    <constructor-arg name="next" ref="subsequentsalepostCardSetupStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostCardSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostCardSetup">
+    <constructor-arg name="next" ref="subsequentsalepostCardCheckStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostCardCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostCardCheck">
+    <constructor-arg name="cardUtils" ref="cardSetupUtility"/>
+    <constructor-arg name="next" ref="subsequentsalepostRecipientSetupStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostRecipientSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostFundsRecipientSetup">
+    <constructor-arg name="next" ref="subsequentsalepostDynamicAcceptorStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostDynamicAcceptorStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostDynamicAcceptor">
+    <constructor-arg name="acceptorUtility" ref="explicitAcceptorUtility"/>
+    <constructor-arg name="next" ref="subsequentsalepostSoftDescriptorStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostSoftDescriptorStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostSoftDescriptor">
+    <constructor-arg name="next" ref="subsequentsalepostDebtRepaymentSetUpStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostDebtRepaymentSetUpStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostDebtRepaymentSetUp">
+    <constructor-arg name="debtRepaymentUtility" ref="debtRepaymentSetUpUtility"/>
+    <constructor-arg name="next" ref="subsequentsalepostFundsRecipientCheckStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostFundsRecipientCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostFundsRecipientCheck">
+    <constructor-arg name="next" ref="subsequentsalepostSTANGenerationStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostSTANGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostSTANGeneration">
+    <constructor-arg name="next" ref="subsequentsalepostStorageStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostStorageStage" class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostStorage">
+    <constructor-arg name="next" ref="subsequentsalepostARNGeneratorStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostARNGeneratorStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostARNGeneration">
+    <constructor-arg name="arnGenerator" ref="arnGeneratorUtility"/>
+    <constructor-arg name="next" ref="subsequentsalepostCostParameterCalculationStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostCostParameterCalculationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostCostDesignatorParameterCalculation">
+    <constructor-arg name="costingUtility" ref="costDesigParamsUtility"/>
+    <constructor-arg name="next" ref="subsequentsalepostLockMerchantStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostLockMerchantStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostLockMerchant">
+    <constructor-arg name="next" ref="subsequentsalepostCheckCardTerminalStatsStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostCheckCardTerminalStatsStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostCheckCardTerminalStatistics">
+    <constructor-arg name="next" ref="subsequentsalepostCheckSchemeTerminalStatsStage"/>
+    <constructor-arg ref="checkCardTerminalStatsUtility"/>
+  </bean>
+
+  <bean id="subsequentsalepostCheckSchemeTerminalStatsStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostCheckSchemeTerminalStatistics">
+    <constructor-arg name="next" ref="subsequentsalepostResponseMappingStage"/>
+    <constructor-arg ref="checkSchemeTerminalStatsUtility"/>
+  </bean>
+
+  <bean id="subsequentsalepostResponseMappingStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostResponseMapping">
+    <constructor-arg ref="responseMapper"/>
+    <constructor-arg name="next" ref="subsequentsalepostSchemeDispatchStage"/>
+  </bean>
+
+  <bean id="subsequentsalepostSchemeDispatchStage"
+        class="com.voicecommerce.endpoint.stages.sale.SubsequentSalePostSchemeDispatch"/>
+
+
+  <!-- Sale Chargeback -->
+  <bean id="salechargebackreceiptInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReceiptSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg ref="salechargebackreceiptExtractStage"/>
+
+  </bean>
+
+  <bean id="salechargebackreceiptExtractStage"
+         class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReceiptExtractDetails">
+    <constructor-arg ref="salechargebackreceiptSetBidStage"/>
+  </bean>
+
+  <bean id="salechargebackreceiptSetBidStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReceiptSetBid">
+    <constructor-arg ref="acquirerBinDAO"/>
+    <constructor-arg ref="salechargebackreceiptARNGenerationStage"/>
+  </bean>
+
+  <bean id="salechargebackreceiptARNGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleChargebackARNGeneration">
+    <constructor-arg ref="arnGeneratorUtility"/>
+    <constructor-arg ref="salechargebackreceiptStorageStage"/>
+  </bean>
+
+  <bean id="salechargebackreceiptStorageStage" class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReceiptStorage" />
+
+  <!-- Sale Chargeback Reversal -->
+  <bean id="salechargebackreversalreceiptInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReversalReceiptSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg ref="salechargebackreversalreceiptExtractStage"/>
+
+  </bean>
+
+  <bean id="salechargebackreversalreceiptExtractStage"
+         class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReversalReceiptExtractDetails">
+    <constructor-arg ref="salechargebackreversalreceiptSetBidStage"/>
+  </bean>
+
+  <bean id="salechargebackreversalreceiptSetBidStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReversalReceiptSetBid">
+    <constructor-arg ref="acquirerBinDAO"/>
+    <constructor-arg ref="salechargebackreversalreceiptARNGenerationStage"/>
+  </bean>
+
+  <bean id="salechargebackreversalreceiptARNGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReversalARNGeneration">
+    <constructor-arg ref="arnGeneratorUtility"/>
+    <constructor-arg ref="salechargebackreversalreceiptStorageStage"/>
+  </bean>
+
+  <bean id="salechargebackreversalreceiptStorageStage" class="com.voicecommerce.endpoint.stages.sale.SaleChargebackReversalReceiptStorage" />
+
+  <!-- Sale Dispute -->
+  <bean id="saledisputereceiptInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReceiptSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg ref="saledisputereceiptExtractStage"/>
+
+  </bean>
+
+  <bean id="saledisputereceiptExtractStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReceiptExtractDetails">
+    <constructor-arg ref="saledisputereceiptSetBidStage"/>
+  </bean>
+
+  <bean id="saledisputereceiptSetBidStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReceiptSetBid">
+    <constructor-arg ref="acquirerBinDAO"/>
+    <constructor-arg ref="saledisputereceiptARNGenerationStage"/>
+  </bean>
+
+  <bean id="saledisputereceiptARNGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeARNGeneration">
+    <constructor-arg ref="arnGeneratorUtility"/>
+    <constructor-arg ref="saledisputereceiptStorageStage"/>
+  </bean>
+
+  <bean id="saledisputereceiptStorageStage" class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReceiptStorage" />
+
+  <!-- Sale Dispute Reversal -->
+  <bean id="saledisputereversalreceiptInitialStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReversalReceiptSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg ref="saledisputereversalreceiptExtractStage"/>
+
+  </bean>
+
+  <bean id="saledisputereversalreceiptExtractStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReversalReceiptExtractDetails">
+    <constructor-arg ref="saledisputereversalreceiptSetBidStage"/>
+  </bean>
+
+  <bean id="saledisputereversalreceiptSetBidStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReversalReceiptSetBid">
+    <constructor-arg ref="acquirerBinDAO"/>
+    <constructor-arg ref="saledisputereversalreceiptARNGenerationStage"/>
+  </bean>
+
+  <bean id="saledisputereversalreceiptARNGenerationStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReversalARNGeneration">
+    <constructor-arg ref="arnGeneratorUtility"/>
+    <constructor-arg ref="saledisputereversalreceiptStorageStage"/>
+  </bean>
+
+  <bean id="saledisputereversalreceiptStorageStage" class="com.voicecommerce.endpoint.stages.sale.SaleDisputeReversalReceiptStorage" />
+
+
+  <!-- CARD-HOLDER-PRESENT SALE POST-->
+  <bean id="saleCHPInitialStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPSetupContext">
+    <constructor-arg ref="saleRepo"/>
+    <constructor-arg name="next" ref="saleCHPFailedSaleCreationStage"/>
+  </bean>
+
+  <bean id="saleCHPFailedSaleCreationStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPFailedSaleCreation">
+    <constructor-arg name="next" ref="saleCHPTransactionSetupStage"/>
+  </bean>
+
+  <bean id="saleCHPTransactionSetupStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPTransactionSetup">
+    <constructor-arg name="next" ref="saleCHPTransactionCheckStage"/>
+  </bean>
+
+  <bean id="saleCHPTransactionCheckStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPTransactionCheck">
+    <constructor-arg name="next" ref="saleCHPSetAuthModeStage"/>
+  </bean>
+
+  <bean id="saleCHPSetAuthModeStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPSetAuthMode">
+    <constructor-arg name="next" ref="saleCHPTrackTwoDataCheck"/>
+    <property name="defaultAuthMode" value="#{'${mastercard.default.authMode}'}"/>
+  </bean>
+
+  <bean id="saleCHPTrackTwoDataCheck"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPTrackTwoDataCheck">
+    <constructor-arg name="next" ref="saleCHPTrackTwoDataSetup"/>
+  </bean>
+
+  <bean id="saleCHPTrackTwoDataSetup"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPTrackTwoDataSetup">
+    <constructor-arg name="next" ref="saleCHPCardSetupStage"/>
+  </bean>
+
+  <bean id="saleCHPCardSetupStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPCardSetup">
+    <constructor-arg name="cardUtils" ref="cardSetupUtility"/>
+    <constructor-arg name="next" ref="saleCHPCardCheckStage"/>
+  </bean>
+
+  <bean id="saleCHPCardCheckStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPCardCheck">
+    <constructor-arg name="schemeCheck" ref="schemeCheckUtility"/>
+    <constructor-arg name="next" ref="saleCHPTerminalSetupStage"/>
+  </bean>
+
+  <bean id="saleCHPTerminalSetupStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPTerminalSetup">
+    <constructor-arg name="next" ref="saleCHPTerminalCheckStage"/>
+  </bean>
+
+  <bean id="saleCHPTerminalCheckStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPTerminalCheck">
+    <constructor-arg name="next" ref="saleCHPDynamicAcceptorStage"/>
+  </bean>
+
+  <bean id="saleCHPDynamicAcceptorStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPDynamicAcceptor">
+    <constructor-arg name="acceptorUtility" ref="explicitAcceptorUtility"/>
+    <constructor-arg name="next" ref="saleCHPDebtRepaymentSetUpStage"/>
+  </bean>
+
+  <bean id="saleCHPDebtRepaymentSetUpStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPDebtRepaymentSetUp">
+    <constructor-arg name="debtRepaymentUtility" ref="debtRepaymentSetUpUtility"/>
+    <constructor-arg name="next" ref="saleCHPSTANGenerationStage"/>
+  </bean>
+
+  <bean id="saleCHPSTANGenerationStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPSTANGeneration">
+    <constructor-arg name="next" ref="saleCHPRecipientSetupStage"/>
+  </bean>
+
+  <bean id="saleCHPRecipientSetupStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPFundsRecipientSetup">
+    <constructor-arg name="next" ref="saleCHPtFundsRecipientCheckStage"/>
+  </bean>
+
+  <bean id="saleCHPtFundsRecipientCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPFundsRecipientCheck">
+    <constructor-arg name="next" ref="saleCHPCashbackCheckStage"/>
+  </bean>
+
+  <bean id="saleCHPCashbackCheckStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPCashbackCheck">
+    <constructor-arg name="next" ref="saleCHPChipDataSetUp"/>
+  </bean>
+
+  <bean id="saleCHPChipDataSetUp"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPChipDataSetUp">
+    <constructor-arg name="next" ref="saleCHPChipDataCheck"/>
+  </bean>
+
+  <bean id="saleCHPChipDataCheck"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPChipDataCheck">
+    <constructor-arg name="next" ref="saleCHPStorageStage"/>
+  </bean>
+
+  <bean id="saleCHPStorageStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPStorage">
+    <constructor-arg name="next" ref="saleCHPARNGeneratorStage"/>
+  </bean>
+
+  <bean id="saleCHPARNGeneratorStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPARNGeneration">
+    <constructor-arg name="arnGenerator" ref="arnGeneratorUtility"/>
+    <!--<constructor-arg name="next" ref="authResponseMapper"/>-->
+    <constructor-arg name="next" ref="saleCHPCostParameterCalculationStage"/>
+  </bean>
+
+  <bean id="saleCHPCostParameterCalculationStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPCostDesignatorParameterCalculation">
+    <constructor-arg name="costingUtility" ref="costCHPParamUtility"/>
+    <constructor-arg name="next" ref="saleCHPLockMerchantStage"/>
+  </bean>
+
+  <bean id="saleCHPLockMerchantStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPLockMerchant">
+    <constructor-arg name="next" ref="saleCHPCheckCardTerminalStatsStage"/>
+  </bean>
+  <bean id="saleCHPCheckCardTerminalStatsStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPCheckCardTerminalStatistics">
+    <constructor-arg name="next" ref="saleCHPCheckSchemeTerminalStatsStage"/>
+    <constructor-arg ref="checkCardTerminalStatsUtility"/>
+  </bean>
+  <bean id="saleCHPCheckSchemeTerminalStatsStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPCheckSchemeTerminalStatistics">
+    <constructor-arg name="next" ref="saleCHPResponseMappingStage"/>
+    <constructor-arg ref="checkSchemeTerminalStatsUtility"/>
+  </bean>
+  <bean id="saleCHPResponseMappingStage"
+          class="com.voicecommerce.endpoint.stages.sale.SaleCHPResponseMapping">
+    <constructor-arg ref="responseMapper"/>
+    <constructor-arg name="next" ref="saleCHPSchemeDispatchStage"/>
+  </bean>
+
+  <bean id="saleCHPSchemeDispatchStage"
+        class="com.voicecommerce.endpoint.stages.sale.SaleCHPSchemeDispatch"/>
+</beans>
